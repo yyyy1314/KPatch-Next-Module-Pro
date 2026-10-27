@@ -6,7 +6,7 @@
 
 下载 Release 中的模块 ZIP，直接在 Magisk/KernelSU 安装。首次启用需要在 WebUI 修补 boot 并重启；请先备份可正常启动的 boot。
 
-仅支持 ARM64，不支持 APatch 或内置 KPM 的内核。模块更新不会自动更新 boot 中的补丁。当前仅验证编译，未验证真机兼容性。
+仅支持 ARM64，不支持 APatch 或内置 KPM 的内核。模块更新不会自动更新 boot 中的补丁。
 
 ## 构建与发布
 
