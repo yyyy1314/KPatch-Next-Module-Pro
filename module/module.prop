@@ -1,9 +1,9 @@
 id=KPatch-Next
-name=KPatch-Next (yyyy1314)
+name=KPatch-Next-Pro
 version=0.0.1
 versionCode=1
 author=yyyy1314; upstream: rifsxd, KOWX712, bmax121
-description=Unofficial KPM module maintained by yyyy1314; engine based on KernelPatch 0.13.9
-updateJson=https://raw.githubusercontent.com/yyyy1314/KPatch-Next-Module/main/update.json
+description=Independent branch of KPatch-Next-Module, based on KernelPatch 0.13.9
+updateJson=https://raw.githubusercontent.com/yyyy1314/KPatch-Next-Module-Pro/main/update.json
 banner=banner.png
 webuiIcon=banner.png

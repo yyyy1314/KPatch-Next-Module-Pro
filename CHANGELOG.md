@@ -1,10 +1,8 @@
-# KPatch Next Module
+# 0.0.1
 
-## 0.0.1
+- 首个独立版本，基于 KernelPatch 0.13.9。
+- KPM 加载、卸载、嵌入及 WebUI 管理。
+- 可直接安装的 ZIP，支持远程更新提示。
+- KPM 加载失败保留文件，安装时不热替换工具。
 
-- Initial independently maintained unofficial release by yyyy1314.
-- Engine based on KernelPatch 0.13.9 with KPatch-Next root-only management interfaces.
-- Directly installable Actions and Release ZIP packages.
-- Fixed main-branch update URL and versioned release downloads.
-- Preserve saved KPM files on load failure and remove installation-time hot replacement.
-- Compilation verified; device boot and KPM compatibility remain unverified.
+仅验证编译，未验证真机兼容性。

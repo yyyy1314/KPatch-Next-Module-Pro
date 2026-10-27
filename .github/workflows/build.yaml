@@ -20,8 +20,8 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/checkout@v4
         with:
-          repository: yyyy1314/KPatch-Next
-          ref: f4bac93af88815a5276ae61d4b5eba9f6c4a10f9
+          repository: yyyy1314/KPatch-Next-Pro
+          ref: 6087858f78ab24a04cdec87444913eb6b22fd879
           path: engine
       - name: Install compiler
         run: |
@@ -61,26 +61,14 @@ jobs:
           echo "name=$VERSION" >> "$GITHUB_OUTPUT"
       - uses: actions/upload-artifact@v4
         with:
-          name: KPatch-Next-Module-${{ steps.version.outputs.name }}
+          name: KPatch-Next-Module-Pro-${{ steps.version.outputs.name }}
           path: module/
           if-no-files-found: error
-      - name: Collect release files
-        if: github.event_name == 'workflow_dispatch' && inputs.create_draft
-        run: |
-          cp "out/KPatch-Next-Module-${{ steps.version.outputs.name }}.zip" out/module-release.zip
-          git archive --format=tar.gz --output=out/module-source.tar.gz HEAD
-          git -C engine archive --format=tar.gz --output="$GITHUB_WORKSPACE/out/engine-source.tar.gz" HEAD
-          cd out
-          sha256sum module-release.zip module-source.tar.gz engine-source.tar.gz > SHA256SUMS
       - uses: actions/upload-artifact@v4
         if: github.event_name == 'workflow_dispatch' && inputs.create_draft
         with:
-          name: release-files-${{ github.sha }}
-          path: |
-            out/module-release.zip
-            out/module-source.tar.gz
-            out/engine-source.tar.gz
-            out/SHA256SUMS
+          name: release-package-${{ github.sha }}
+          path: out/KPatch-Next-Module-Pro-${{ steps.version.outputs.name }}.zip
           if-no-files-found: error
     outputs:
       version: ${{ steps.version.outputs.name }}
@@ -95,18 +83,15 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/download-artifact@v4
         with:
-          name: release-files-${{ github.sha }}
+          name: release-package-${{ github.sha }}
           path: release-files
-      - name: Name release assets
-        working-directory: release-files
-        run: |
-          mv module-release.zip "KPatch-Next-Module-${{ needs.build.outputs.version }}.zip"
-          mv module-source.tar.gz "KPatch-Next-Module-${{ needs.build.outputs.version }}-source.tar.gz"
-          mv engine-source.tar.gz "KPatch-Next-Module-${{ needs.build.outputs.version }}-engine-source.tar.gz"
-          sha256sum *.zip *.tar.gz > SHA256SUMS
       - name: Create draft prerelease
         env:
           GH_TOKEN: ${{ github.token }}
           VERSION: ${{ needs.build.outputs.version }}
+          ENGINE_COMMIT: 6087858f78ab24a04cdec87444913eb6b22fd879
         run: |
-          gh release create "$VERSION" release-files/* --target "$GITHUB_SHA" --title "$VERSION" --notes-file CHANGELOG.md --draft --prerelease
+          cp CHANGELOG.md release-notes.md
+          printf '\nModule source: https://github.com/%s/tree/%s\nEngine source: https://github.com/yyyy1314/KPatch-Next-Pro/tree/%s\n\nSHA-256: ' "$GITHUB_REPOSITORY" "$GITHUB_SHA" "$ENGINE_COMMIT" >> release-notes.md
+          sha256sum "release-files/KPatch-Next-Module-Pro-$VERSION.zip" >> release-notes.md
+          gh release create "$VERSION" "release-files/KPatch-Next-Module-Pro-$VERSION.zip" --target "$GITHUB_SHA" --title "$VERSION" --notes-file release-notes.md --draft --prerelease

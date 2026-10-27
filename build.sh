@@ -54,7 +54,7 @@ VERSION_MAGISKBOOT="${VERSION_MAGISKBOOT:-latest}"
 
 # Fetch KPatch-Next binaries
 if [[ ! -f "module/bin/kpatch" || ! -f "module/bin/kpimg" || ! -f "module/bin/kptools" ]]; then
-    download_assets "yyyy1314/KPatch-Next" "$VERSION_KPATCH_NEXT" "kpatch-android" "kpimg-linux" "kptools-android" || exit 1
+    download_assets "yyyy1314/KPatch-Next-Pro" "$VERSION_KPATCH_NEXT" "kpatch-android" "kpimg-linux" "kptools-android" || exit 1
 
     mv module/bin/kpatch-android module/bin/kpatch
     mv module/bin/kptools-android module/bin/kptools
@@ -76,5 +76,5 @@ for tool in kpatch kpimg kptools magiskboot; do
     [ -s "module/bin/$tool" ] || exit 1
 done
 chmod 755 module/bin/kpatch module/bin/kptools module/bin/magiskboot
-rm -f "out/KPatch-Next-Module-${VERSION}.zip"
-(cd module && zip -r "../out/KPatch-Next-Module-${VERSION}.zip" .)
+rm -f "out/KPatch-Next-Module-Pro-${VERSION}.zip"
+(cd module && zip -r "../out/KPatch-Next-Module-Pro-${VERSION}.zip" .)
