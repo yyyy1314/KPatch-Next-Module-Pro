@@ -1,0 +1,8 @@
+Unofficial derivative maintained by yyyy1314.
+Original module: KernelSU-Next/KPatch-Next-Module (rifsxd, KOWX712), GPL-3.0.
+Engine: yyyy1314/KPatch-Next, derived from KernelSU-Next/KPatch-Next and bmax121/KernelPatch 0.13.9, GPL-2.0.
+Patch scripts originate from APatch: https://github.com/bmax121/APatch
+magiskboot originates from Magisk v30.6, GPL-3.0: https://github.com/topjohnwu/Magisk/tree/v30.6
+WebUI: original copyright holders, MIT (see WEBUI-LICENSE).
+Source and build instructions: https://github.com/yyyy1314/KPatch-Next-Module
+The release includes matching module and engine source archives.

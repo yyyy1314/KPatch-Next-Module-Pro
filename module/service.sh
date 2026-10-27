@@ -13,7 +13,7 @@ fi
 
 for kpm in $KPNDIR/kpm/*.kpm; do
     [ -s "$kpm" ] || continue
-    kpatch kpm load "$kpm" || rm -f "$kpm"
+    kpatch kpm load "$kpm"
 done
 
 if [ -n "$REHOOK" ]; then

@@ -2,8 +2,13 @@ name: Build
 
 on:
   push:
-    branches: [use-kernelpatch-0.13.9]
+    branches: [main]
   workflow_dispatch:
+    inputs:
+      create_draft:
+        description: Create a draft prerelease from this main commit
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -16,7 +21,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           repository: yyyy1314/KPatch-Next
-          ref: 9fde879c66287dcc2d7847519b3316462272a6c0
+          ref: f4bac93af88815a5276ae61d4b5eba9f6c4a10f9
           path: engine
       - name: Install compiler
         run: |
@@ -49,8 +54,59 @@ jobs:
           version: '10.28.2'
       - name: Build module
         run: bash build.sh
+      - name: Read module version
+        id: version
+        run: |
+          VERSION=$(sed -n 's/^version=//p' module/module.prop)
+          echo "name=$VERSION" >> "$GITHUB_OUTPUT"
       - uses: actions/upload-artifact@v4
         with:
-          name: KPatch-Next-Module-kp0.13.9-1-${{ github.sha }}
-          path: out/*.zip
+          name: KPatch-Next-Module-${{ steps.version.outputs.name }}
+          path: module/
           if-no-files-found: error
+      - name: Collect release files
+        if: github.event_name == 'workflow_dispatch' && inputs.create_draft
+        run: |
+          cp "out/KPatch-Next-Module-${{ steps.version.outputs.name }}.zip" out/module-release.zip
+          git archive --format=tar.gz --output=out/module-source.tar.gz HEAD
+          git -C engine archive --format=tar.gz --output="$GITHUB_WORKSPACE/out/engine-source.tar.gz" HEAD
+          cd out
+          sha256sum module-release.zip module-source.tar.gz engine-source.tar.gz > SHA256SUMS
+      - uses: actions/upload-artifact@v4
+        if: github.event_name == 'workflow_dispatch' && inputs.create_draft
+        with:
+          name: release-files-${{ github.sha }}
+          path: |
+            out/module-release.zip
+            out/module-source.tar.gz
+            out/engine-source.tar.gz
+            out/SHA256SUMS
+          if-no-files-found: error
+    outputs:
+      version: ${{ steps.version.outputs.name }}
+
+  draft-release:
+    if: github.event_name == 'workflow_dispatch' && inputs.create_draft && github.ref == 'refs/heads/main'
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: release-files-${{ github.sha }}
+          path: release-files
+      - name: Name release assets
+        working-directory: release-files
+        run: |
+          mv module-release.zip "KPatch-Next-Module-${{ needs.build.outputs.version }}.zip"
+          mv module-source.tar.gz "KPatch-Next-Module-${{ needs.build.outputs.version }}-source.tar.gz"
+          mv engine-source.tar.gz "KPatch-Next-Module-${{ needs.build.outputs.version }}-engine-source.tar.gz"
+          sha256sum *.zip *.tar.gz > SHA256SUMS
+      - name: Create draft prerelease
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ needs.build.outputs.version }}
+        run: |
+          gh release create "$VERSION" release-files/* --target "$GITHUB_SHA" --title "$VERSION" --notes-file CHANGELOG.md --draft --prerelease

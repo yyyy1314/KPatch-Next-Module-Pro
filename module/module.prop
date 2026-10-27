@@ -1,9 +1,9 @@
 id=KPatch-Next
-name=KPatch-Next
-version=v0.0.1-kp0.13.9-1
+name=KPatch-Next (yyyy1314)
+version=0.0.1
 versionCode=1
-author=rifsxd, KOWX712
-description=Standalone implementation of KPM support for Magisk/KernelSU
-updateJson=https://raw.githubusercontent.com/yyyy1314/KPatch-Next-Module/use-kernelpatch-0.13.9/update.json
+author=yyyy1314; upstream: rifsxd, KOWX712, bmax121
+description=Unofficial KPM module maintained by yyyy1314; engine based on KernelPatch 0.13.9
+updateJson=https://raw.githubusercontent.com/yyyy1314/KPatch-Next-Module/main/update.json
 banner=banner.png
 webuiIcon=banner.png
