@@ -53,7 +53,7 @@ VERSION_MAGISKBOOT="${VERSION_MAGISKBOOT:-latest}"
 
 # Fetch KPatch-Next binaries
 if [[ ! -f "module/bin/kpatch" || ! -f "module/bin/kpimg" || ! -f "module/bin/kptools" ]]; then
-    download_assets "KernelSU-Next/KPatch-Next" "$VERSION_KPATCH_NEXT" "kpatch-android" "kpimg-linux" "kptools-android"
+    download_assets "yyyy1314/KPatch-Next" "$VERSION_KPATCH_NEXT" "kpatch-android" "kpimg-linux" "kptools-android"
 
     mv module/bin/kpatch-android module/bin/kpatch
     mv module/bin/kptools-android module/bin/kptools

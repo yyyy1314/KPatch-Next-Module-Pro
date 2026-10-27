@@ -2,134 +2,55 @@ name: Build
 
 on:
   push:
-    branches:
-      - main
-    paths-ignore:
-      - '**.md'
+    branches: [use-kernelpatch-0.13.9]
   workflow_dispatch:
 
-env:
-  MODULE_NAME: 'KPatch-Next-Module'
-  GH_TOKEN: ${{ github.token }}
+permissions:
+  contents: read
 
 jobs:
   build:
     runs-on: ubuntu-latest
-    outputs:
-      version: ${{ steps.set_vars.outputs.version }}
-      check_tag: ${{ steps.check_tag.outputs.need_release }}
     steps:
-    - name: Checkout
-      uses: actions/checkout@v6
-      with:
-        fetch-depth: 1
-
-    - name: Load versions from version.properties
-      run: |
-        grep -v '^#' version.properties | sed -e 's/ *= */=/g' -e 's/"//g' >> $GITHUB_ENV
-
-    - name: download kpatch-next binaries
-      run: |
-        mkdir -p module/bin
-        TAG="${{ env['kpatch-next'] }}"
-        ARGS=("-R" "KernelSU-Next/KPatch-Next" "-p" "kpatch-android" "-p" "kptools-android" "-p" "kpimg-linux" "-D" "module/bin")
-        if [ "$TAG" != "latest" ]; then
-          gh release download "$TAG" "${ARGS[@]}"
-        else
-          gh release download "${ARGS[@]}"
-        fi
-        mv module/bin/kpatch-android module/bin/kpatch
-        mv module/bin/kptools-android module/bin/kptools
-        mv module/bin/kpimg-linux module/bin/kpimg
-
-    - name: Download magiskboot binary
-      run: |
-        TAG="${{ env.magiskboot }}"
-        ARGS=("-R" "topjohnwu/Magisk" "-p" "Magisk*.apk" "-O" "magisk.apk")
-        if [ "$TAG" != "latest" ]; then
-          gh release download "$TAG" "${ARGS[@]}"
-        else
-          gh release download "${ARGS[@]}"
-        fi
-        unzip -p magisk.apk 'lib/arm64-v8a/libmagiskboot.so' > module/bin/magiskboot
-        rm magisk.apk
-
-    - name: Setup pnpm
-      uses: pnpm/action-setup@v4
-      with:
-        version: 'latest'
-
-    - name: Setup Node
-      uses: actions/setup-node@v4
-      with:
-        node-version: 'latest'
-        cache: 'pnpm'
-        cache-dependency-path: webui/pnpm-lock.yaml
-
-    - name: build webroot
-      run: |
-        cd webui
-        pnpm install --frozen-lockfile
-        pnpm build
-
-    - name: Upload artifact
-      uses: actions/upload-artifact@v6
-      with:
-        name: ${{ env.MODULE_NAME }}-${{ github.run_number }}
-        path: 'module'
-
-    - name: Check if valid to release
-      id: check_tag
-      run: |
-          if [ "${{ github.event_name }}" = "pull_request" ]; then
-            echo "need_release=false" >> $GITHUB_OUTPUT
-          else
-            git fetch --tags
-            VERSION="$(jq -r .version update.json)"
-            if [ -z "$VERSION" ]; then
-              echo "need_release=false" >> $GITHUB_OUTPUT
-            elif git tag | grep -qx "^${VERSION}"; then
-              echo "need_release=false" >> $GITHUB_OUTPUT
-            else
-              echo "version=${VERSION}" >> $GITHUB_OUTPUT
-              echo "need_release=true" >> $GITHUB_OUTPUT
-            fi
-          fi
-
-  release:
-    runs-on: ubuntu-latest
-    needs: build
-    if: needs.release.outputs.check_tag == 'true'
-    steps:
-    - name: Checkout
-      uses: actions/checkout@v6
-      with:
-        fetch-depth: 2
-
-    - name: Download artifact
-      uses: actions/download-artifact@v7
-      with:
-        name: ${{ env.MODULE_NAME }}-${{ github.run_number }}
-        path: ${{ env.MODULE_NAME }}
-
-    - name: Zip for release
-      run: cd ${{ env.MODULE_NAME }} && zip -r ../${{ env.MODULE_NAME }}.zip .
-
-    - name: Generate changelog
-      run: |
-        CHANGELOG_RAW=$(git diff HEAD^ HEAD -- "CHANGELOG.md" | grep '^+[^+]' | sed 's/^+//')
-        {
-          echo "CHANGELOG<<EOF"
-          echo -e "${CHANGELOG_RAW}"
-          echo "EOF"
-        } >> $GITHUB_ENV
-
-    - name: Create Release
-      uses: softprops/action-gh-release@v2
-      with:
-        tag_name: ${{ needs.release.outputs.version }}
-        name: ${{ needs.release.outputs.version }}
-        body: ${{ env.CHANGELOG }}
-        files: ${{ env.MODULE_NAME }}.zip
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: yyyy1314/KPatch-Next
+          ref: 9fde879c66287dcc2d7847519b3316462272a6c0
+          path: engine
+      - name: Install compiler
+        run: |
+          curl -fL -o toolchain.tar.xz https://armkeil.blob.core.windows.net/developer/Files/downloads/gnu/12.2.rel1/binrel/arm-gnu-toolchain-12.2.rel1-x86_64-aarch64-none-elf.tar.xz
+          tar -Jxf toolchain.tar.xz
+      - name: Build kpimg
+        run: make -C engine/kernel TARGET_COMPILE="$GITHUB_WORKSPACE/arm-gnu-toolchain-12.2.rel1-x86_64-aarch64-none-elf/bin/aarch64-none-elf-" -j2
+      - name: Setup Android NDK
+        uses: nttld/setup-ndk@v1
+        id: ndk
+        with:
+          ndk-version: r26b
+      - name: Build Android tools
+        env:
+          ANDROID_NDK: ${{ steps.ndk.outputs.ndk-path }}
+        run: |
+          for component in tools user; do
+            cmake -S "engine/$component" -B "engine/$component/build/android" -DCMAKE_TOOLCHAIN_FILE="$ANDROID_NDK/build/cmake/android.toolchain.cmake" -DCMAKE_BUILD_TYPE=Release -DANDROID_PLATFORM=android-33 -DANDROID_ABI=arm64-v8a
+            cmake --build "engine/$component/build/android" -j2
+          done
+          mkdir -p module/bin
+          cp engine/kernel/kpimg module/bin/kpimg
+          cp engine/tools/build/android/kptools module/bin/kptools
+          cp engine/user/build/android/kpatch module/bin/kpatch
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: pnpm/action-setup@v4
+        with:
+          version: '10.28.2'
+      - name: Build module
+        run: bash build.sh
+      - uses: actions/upload-artifact@v4
+        with:
+          name: KPatch-Next-Module-kp0.13.9-1-${{ github.sha }}
+          path: out/*.zip
+          if-no-files-found: error
