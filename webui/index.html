@@ -19,7 +19,7 @@
                 <md-icon-button flip-icon-in-rtl="true" class="search-bg" id="back-btn">
                     <md-icon><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960"><path d="m313-440 224 224-57 56-320-320 320-320 57 56-224 224h487v80H313Z" /></svg></md-icon>
                 </md-icon-button>
-                <div class="title search-bg" slot="headline">KPatch Next</div>
+                <div class="title search-bg" slot="headline">KPatch-Next-Pro</div>
                 <!-- Home Icons -->
                 <div class="top-bar-trailing-icon" id="home-icon">
                     <md-icon-button id="patch-btn">
@@ -177,6 +177,9 @@
                 <div class="page-content">
                     <div class="card content-padding patch-only animated animate-hidden" id="kpimg">
                         <div class="card-title" slot="headline">kpimg</div>
+                        <label class="engine-selector"><span data-i18n="label_engine_version">Patch version</span>
+                            <select id="engine-version"><option value="0.13.9">0.13.9</option><option value="0.13.8">0.13.8</option></select>
+                        </label>
                         <div id="kpimg-version"></div>
                         <div id="kpimg-time"></div>
                         <div id="kpimg-config"></div>

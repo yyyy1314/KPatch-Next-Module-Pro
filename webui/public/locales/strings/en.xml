@@ -82,4 +82,8 @@
     <string name="msg_error_loading_apps">Error loading apps: </string>
     <string name="msg_error_rendering_apps">Error rendering apps: </string>
     <string name="msg_unknown">Unknown</string>
+    <string name="label_engine_version">Patch version</string>
+    <string name="info_autoload">Load on boot</string>
+    <string name="info_temporary">Temporary</string>
+    <string name="info_source_unknown">Unknown source</string>
 </resources>

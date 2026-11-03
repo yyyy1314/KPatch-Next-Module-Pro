@@ -75,4 +75,8 @@
     <string name="msg_error_loading_apps">Errore durante il caricamento delle app: </string>
     <string name="msg_error_rendering_apps">Errore durante il rendering delle app: </string>
     <string name="msg_unknown">Sconosciuto</string>
+    <string name="label_engine_version">Versione patch</string>
+    <string name="info_autoload">Caricato all’avvio</string>
+    <string name="info_temporary">Caricamento temporaneo</string>
+    <string name="info_source_unknown">Origine sconosciuta</string>
 </resources>

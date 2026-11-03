@@ -82,4 +82,8 @@
     <string name="msg_error_loading_apps">Ошибка загрузки приложений: </string>
     <string name="msg_error_rendering_apps">Ошибка отображения приложений: </string>
     <string name="msg_unknown">Неизвестно</string>
+    <string name="label_engine_version">Версия патча</string>
+    <string name="info_autoload">Загрузка при запуске</string>
+    <string name="info_temporary">Временная загрузка</string>
+    <string name="info_source_unknown">Источник неизвестен</string>
 </resources>

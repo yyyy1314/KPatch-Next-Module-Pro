@@ -80,4 +80,8 @@
     <string name="msg_error_loading_apps">خطأ في تحميل التطبيقات: </string>
     <string name="msg_error_rendering_apps">حدث خطأ في عرض التطبيقات: </string>
     <string name="msg_unknown">غير معروف</string>
+    <string name="label_engine_version">إصدار التصحيح</string>
+    <string name="info_autoload">تحميل عند الإقلاع</string>
+    <string name="info_temporary">تحميل مؤقت</string>
+    <string name="info_source_unknown">مصدر غير معروف</string>
 </resources>

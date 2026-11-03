@@ -59,6 +59,8 @@ async function getKpmList() {
             moduleInfo[key] = valueParts.join('=');
         });
 
+        const saved = await exec(`[ -f ${escapeShell(`${persistDir}/kpm/${moduleName}.kpm`)} ]`);
+        moduleInfo.source = moduleInfo.load_source === 'embedded' ? 'info_embedded' : saved.errno === 0 ? 'info_autoload' : moduleInfo.load_source === 'file' ? 'info_temporary' : 'info_source_unknown';
         return moduleInfo;
     });
 
@@ -107,7 +109,7 @@ async function renderKpmList() {
             item.className = 'card module-card';
             item.innerHTML = `
                 <div class="module-card-header">
-                    <div class="module-card-title">${module.name}</div>
+                    <div class="flex-header"><div class="module-card-title">${module.name}</div><span class="module-source"></span></div>
                     <div class="module-card-subtitle">${module.version}, ${getString('info_author', module.author)}</div>
                     <div class="module-card-subtitle">${getString('info_args', module.args ? module.args : '(null)')}</div>
                 </div>
@@ -153,6 +155,7 @@ async function renderKpmList() {
 
             kpmItemMap.set(module.name, item);
         }
+        item.querySelector('.module-source').textContent = getString(module.source || 'info_source_unknown');
         container.appendChild(item);
     });
 

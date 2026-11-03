@@ -28,7 +28,10 @@ ARCH=$(getprop ro.product.cpu.abi)
 
 BOOTIMAGE=$1
 FLASH_TO_DEVICE=$2
-shift 2
+VERSION=$3
+shift 3
+. "$MODPATH/engine_functions.sh"
+select_engine "$VERSION" || exit 1
 
 [ -e "$BOOTIMAGE" ] || { >&2 echo "! $BOOTIMAGE does not exist"; exit 1; }
 
@@ -59,17 +62,14 @@ if [ ! $(kptools -i kernel -f | grep CONFIG_KALLSYMS_ALL=y) ]; then
 	exit 1
 fi
 
-if [  $(kptools -i kernel -l | grep patched=false) ]; then
-	echo "- Backing boot.img "
-  cp "$BOOTIMAGE" "ori.img" >/dev/null 2>&1
-fi
+restore_kernel || exit 1
 
 mv kernel kernel.ori
 
 echo "- Patching kernel"
 
 set -x
-kptools -p -i kernel.ori -k kpimg -o kernel "$@"
+kptools -p -i kernel.ori -k "$ENGINE/kpimg" -o kernel "$@"
 patch_rc=$?
 set +x
 
@@ -87,20 +87,14 @@ if [ $? -ne 0 ]; then
 fi
 
 if [ "$FLASH_TO_DEVICE" = "true" ]; then
-  # flash
-  if [ -b "$BOOTIMAGE" ] || [ -c "$BOOTIMAGE" ] && [ -f "new-boot.img" ]; then
-    echo "- Flashing new boot image"
-    flash_image new-boot.img "$BOOTIMAGE"
-    if [ $? -ne 0 ]; then
-      >&2 echo "! Flash error: $?"
-      save_image_to_storage "new-boot.img"
-      exit 1
-    fi
-  fi
-
+  [ -f new-boot.img ] || exit 1
+  backup_boot || exit 1
+  echo "- Flashing new boot image"
+  flash_image new-boot.img "$BOOTIMAGE" || { save_image_to_storage new-boot.img; exit 1; }
+  rm -rf "$KPNDIR/kpm" || exit 1
+  mkdir -p "$KPNDIR/kpm" || exit 1
   echo "- Successfully Flashed!"
 else
-  save_image_to_storage "new-boot.img"
+  save_image_to_storage new-boot.img || exit 1
   echo "- Successfully Patched!"
 fi
-

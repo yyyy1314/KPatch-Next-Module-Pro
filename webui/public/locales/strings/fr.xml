@@ -79,4 +79,8 @@
     <string name="msg_error_loading_apps">Erreur du chargement des applis: </string>
     <string name="msg_error_rendering_apps">Erreur d'affichage des applis: </string>
     <string name="msg_unknown">Inconnu</string>
+    <string name="label_engine_version">Version du correctif</string>
+    <string name="info_autoload">Chargé au démarrage</string>
+    <string name="info_temporary">Chargement temporaire</string>
+    <string name="info_source_unknown">Source inconnue</string>
 </resources>

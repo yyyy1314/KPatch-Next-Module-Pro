@@ -63,7 +63,7 @@ function preparePatchUI(title, isUnpatch) {
 }
 
 function navigateToHome() {
-    switchPage('home-page', 'KPatch Next', 'home');
+    switchPage('home-page', 'KPatch-Next-Pro', 'home');
 }
 
 function navigateToKPM() {
@@ -78,8 +78,10 @@ function navigateToSettings() {
     switchPage('settings-page', getString('title_settings'), 'settings');
 }
 
-function navigateToPatch() {
+async function navigateToPatch() {
     preparePatchUI(getString('title_patch'), false);
+    const version = await patchModule.getInstalledVersion();
+    document.getElementById('engine-version').value = ['0.13.8', '0.13.9'].includes(version) ? version : '0.13.9';
     patchModule.getKpimgInfo();
     patchModule.extractAndParseBootimg();
 }
@@ -96,6 +98,7 @@ function updateBottomBar(activeId) {
 }
 
 export function setupRoute() {
+    document.getElementById('engine-version').onchange = patchModule.getKpimgInfo;
     document.getElementById('patch-btn').onclick = navigateToPatch;
     document.getElementById('uninstall').onclick = navigateToUnPatch;
     document.getElementById('not-installed').onclick = navigateToPatch;

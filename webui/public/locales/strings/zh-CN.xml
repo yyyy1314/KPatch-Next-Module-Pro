@@ -82,4 +82,8 @@
     <string name="msg_error_loading_apps">加载应用时出错：</string>
     <string name="msg_error_rendering_apps">渲染应用时出错：</string>
     <string name="msg_unknown">未知</string>
+    <string name="label_engine_version">补丁版本</string>
+    <string name="info_autoload">开机加载</string>
+    <string name="info_temporary">临时加载</string>
+    <string name="info_source_unknown">来源未知</string>
 </resources>

@@ -1,6 +1,6 @@
 # KPatch-Next-Module-Pro
 
-[KPatch-Next-Module](https://github.com/KernelSU-Next/KPatch-Next-Module) 的独立分支，为 Magisk/KernelSU 提供 KPM 管理。内核引擎采用 [KPatch-Next-Pro](https://github.com/yyyy1314/KPatch-Next-Pro)，基于 KernelPatch 0.13.9。
+[KPatch-Next-Module](https://github.com/KernelSU-Next/KPatch-Next-Module) 的独立分支，为 Magisk/KernelSU 提供 KPM 管理。内核引擎采用 [KPatch-Next-Pro](https://github.com/yyyy1314/KPatch-Next-Pro)，基于 KernelPatch 0.13.8 / 0.13.9。
 
 ## 使用
 
@@ -10,7 +10,7 @@
 
 ## 构建与发布
 
-Actions → Build → main。普通构建生成可直接安装的 ZIP；勾选 `create_draft` 创建预发布草稿，只上传一个模块 ZIP。
+Actions → Build → main。普通构建生成可直接安装的 ZIP；勾选 `publish_release` 发布正式版本，只上传一个模块 ZIP。
 
 更新时递增 `module/module.prop` 的版本及 `versionCode`。发布 ZIP 后，再更新 `update.json`。升级内核引擎时同步修改工作流中的固定提交。
 

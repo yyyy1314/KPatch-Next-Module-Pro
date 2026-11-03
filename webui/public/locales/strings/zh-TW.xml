@@ -82,4 +82,8 @@
     <string name="msg_error_loading_apps">載入應用時發生錯誤：</string>
     <string name="msg_error_rendering_apps">繪製應用時發生錯誤：</string>
     <string name="msg_unknown">未知</string>
+    <string name="label_engine_version">修補版本</string>
+    <string name="info_autoload">開機載入</string>
+    <string name="info_temporary">暫時載入</string>
+    <string name="info_source_unknown">來源不明</string>
 </resources>

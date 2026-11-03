@@ -37,7 +37,7 @@ function parseIni(str) {
 }
 
 async function getInstalledVersion() {
-    if (import.meta.env.DEV) return uInt2String('c06');
+    if (import.meta.env.DEV) return '0.13.9';
     const working = await exec(`kpatch hello`, { env: { PATH: `${modDir}/bin` } });
     if (working.stdout.trim() === '') return null;
     const version = await exec(`kpatch kpver`, { env: { PATH: `${modDir}/bin` } });
@@ -47,27 +47,16 @@ async function getInstalledVersion() {
 let bootSlot = '';
 let bootDev = '';
 let kimgInfo = { banner: '', patched: false };
-let kpimgInfo = { version: '', compile_time: '', config: '' };
-let existedExtras = [];
 let newExtras = [];
 
 async function getKpimgInfo() {
-    if (kpimgInfo.version) {
-        document.getElementById('kpimg-version').textContent = getString('info_version', uInt2String(kpimgInfo.version));
-        document.getElementById('kpimg-time').textContent = getString('info_time', kpimgInfo.compile_time);
-        document.getElementById('kpimg-config').textContent = getString('info_config', kpimgInfo.config);
-        document.getElementById('kpimg').classList.remove('animate-hidden');
-        return;
-    }
-    const result = await exec(`kptools -l -k ${modDir}/bin/kpimg`, { env: { PATH: `${modDir}/bin` } });
+    const selected = document.getElementById('engine-version').value;
+    const result = await exec(`"${modDir}/bin/engines/${selected}/kptools" -l -k "${modDir}/bin/engines/${selected}/kpimg"`);
     if (import.meta.env.DEV) {
-        result.stdout = `[kpimg]\nversion=0xc06\ncompile_time=11:08:10 Dec 30 2025\nconfig=linux,release`;
+        result.stdout = `[kpimg]\nversion=${selected === '0.13.8' ? '0xd08' : '0xd09'}\ncompile_time=Development\nconfig=linux,release`;
     }
     const ini = parseIni(result.stdout);
     if (ini.kpimg) {
-        kpimgInfo.version = ini.kpimg.version;
-        kpimgInfo.compile_time = ini.kpimg.compile_time;
-        kpimgInfo.config = ini.kpimg.config;
 
         document.getElementById('kpimg-version').textContent = getString('info_version', uInt2String(ini.kpimg.version));
         document.getElementById('kpimg-time').textContent = getString('info_time', ini.kpimg.compile_time);
@@ -121,46 +110,17 @@ async function parseBootimg() {
         document.getElementById('kernel-info').textContent = kimgInfo.banner;
         document.getElementById('kernel').classList.remove('animate-hidden');
 
-        if (kimgInfo.patched && ini.kpimg) {
-            // Parse extras
-            existedExtras = [];
-            let kpmNum = parseInt(ini.kernel.extra_num);
-            if (isNaN(kpmNum) && ini.extras) {
-                kpmNum = parseInt(ini.extras.num);
-            }
-
-            if (kpmNum > 0) {
-                for (let i = 0; i < kpmNum; i++) {
-                    const extra = ini[`extra ${i}`];
-                    if (extra && extra.type.toUpperCase() === 'KPM') {
-                        existedExtras.push({
-                            type: 'KPM',
-                            name: extra.name,
-                            event: extra.event || 'pre-kernel-init',
-                            args: extra.args || '',
-                            version: extra.version,
-                            license: extra.license,
-                            author: extra.author,
-                            description: extra.description,
-                            isNew: false
-                        });
-                    }
-                }
-            }
-        }
         renderKpmList();
     }
 }
 
 async function extractAndParseBootimg() {
-    if (bootDev) {
-        document.getElementById('bootimg').classList.remove('animate-hidden');
-        extractBootimg(bootDev);
-        return;
-    }
+    newExtras = [];
+    renderKpmList();
+    bootDev = '';
 
     // Prepare work directory
-    const prepare = spawn(`mkdir -p ${modDir}/tmp && rm -rf ${modDir}/tmp/* && cp ${modDir}/bin/kpimg ${modDir}/tmp/`);
+    const prepare = spawn(`mkdir -p ${modDir}/tmp && rm -rf ${modDir}/tmp/*`);
     await new Promise((resolve) => {
         prepare.on('exit', () => resolve());
     });
@@ -205,14 +165,13 @@ function renderKpmList() {
     const list = document.getElementById('kpm-embed-list');
     list.innerHTML = '';
 
-    const createCard = (item, index, isNew) => {
+    const createCard = (item, index) => {
         const card = document.createElement('div');
         card.className = 'card module-card';
         card.innerHTML = `
             <div class="module-card-header">
                 <div class="flex-header">
                     <div class="module-card-title">${item.name}</div>
-                    ${isNew ? '' : '<div class="tag">' + getString('info_embedded') + '</div>'}
                 </div>
                 <div class="module-card-subtitle">${item.version}, ${getString('info_author', item.author || getString('msg_unknown'))}</div>
                 <div class="module-card-subtitle">${getString('info_args', item.args ? item.args : '(null)')}</div>
@@ -233,24 +192,14 @@ function renderKpmList() {
 
         card.querySelector('.control').onclick = () => openOptionDialog(item);
         card.querySelector('.unload').onclick = () => {
-            if (isNew) {
-                newExtras.splice(index, 1);
-            } else {
-                existedExtras.splice(index, 1);
-            }
+            newExtras.splice(index, 1);
             renderKpmList();
         };
 
         return card;
     };
 
-    const appendCard = (item, idx, isNew) => {
-        const card = createCard(item, idx, isNew);
-        list.appendChild(card);
-    }
-
-    existedExtras.forEach((item, idx) => appendCard(item, idx, false));
-    newExtras.forEach((item, idx) => appendCard(item, idx, true));
+    newExtras.forEach((item, idx) => list.appendChild(createCard(item, idx)));
 }
 
 function openOptionDialog(item) {
@@ -350,7 +299,8 @@ function patch(type) {
         args.push(
             `${modDir}/patch/boot_patch.sh`,
             bootDev,
-            flashToDevice.selected ? 'true' : 'false'
+            flashToDevice.selected ? 'true' : 'false',
+            document.getElementById('engine-version').value
         );
 
         // New kpm
@@ -361,13 +311,6 @@ function patch(type) {
             args.push('-T', 'kpm');
         });
 
-        // Embeded kpm
-        existedExtras.forEach(extra => {
-            args.push('-E', extra.name);
-            if (extra.args) args.push('-A', escapeShell(extra.args));
-            if (extra.event) args.push('-V', extra.event);
-            args.push('-T', 'kpm');
-        });
     } else {
         // Unpatch logic
         args.push(`${modDir}/patch/boot_unpatch.sh`, bootDev);
@@ -388,7 +331,7 @@ function patch(type) {
     process.stderr.on('data', onOutput);
     process.on('exit', (code) => {
         if (code === 0) {
-            document.getElementById('reboot-fab').classList.remove('hide');
+            if (type !== 'patch' || flashToDevice.selected) document.getElementById('reboot-fab').classList.remove('hide');
             bootSlot = '';
             bootDev = '';
             kimgInfo = { banner: '', patched: false };

@@ -81,4 +81,8 @@
     <string name="msg_error_loading_apps">অ্যাপ লোড করতে ত্রুটি: </string>
     <string name="msg_error_rendering_apps">অ্যাপ রেন্ডার করতে ত্রুটি: </string>
     <string name="msg_unknown">অজানা</string>
+    <string name="label_engine_version">প্যাচ সংস্করণ</string>
+    <string name="info_autoload">বুটের সময় লোড</string>
+    <string name="info_temporary">অস্থায়ী লোড</string>
+    <string name="info_source_unknown">অজানা উৎস</string>
 </resources>

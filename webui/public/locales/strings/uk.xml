@@ -82,4 +82,8 @@
     <string name="msg_error_loading_apps">Помилка завантаження програм: </string>
     <string name="msg_error_rendering_apps">Помилка рендерингу програм: </string>
     <string name="msg_unknown">Невідомо</string>
+    <string name="label_engine_version">Версія патча</string>
+    <string name="info_autoload">Завантаження під час запуску</string>
+    <string name="info_temporary">Тимчасове завантаження</string>
+    <string name="info_source_unknown">Невідоме джерело</string>
 </resources>

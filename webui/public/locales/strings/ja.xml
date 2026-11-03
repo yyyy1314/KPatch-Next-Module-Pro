@@ -81,4 +81,8 @@
     <string name="msg_error_loading_apps">アプリの読み込みエラー: </string>
     <string name="msg_error_rendering_apps">アプリのレンダリングエラー: </string>
     <string name="msg_unknown">不明</string>
+    <string name="label_engine_version">パッチバージョン</string>
+    <string name="info_autoload">起動時に読み込み</string>
+    <string name="info_temporary">一時読み込み</string>
+    <string name="info_source_unknown">読み込み元不明</string>
 </resources>

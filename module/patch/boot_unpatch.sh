@@ -20,52 +20,16 @@ echo "- Target image: $BOOTIMAGE"
 command -v magiskboot >/dev/null 2>&1 || { echo "- Command magiskboot not found!"; exit 1; }
 command -v kptools >/dev/null 2>&1 || { echo "- Command kptools not found!"; exit 1; }
 
+. "$MODPATH/engine_functions.sh"
+select_engine 0.13.9 || exit 1
 if [ ! -f kernel ]; then
-echo "- Unpacking boot image"
-magiskboot unpack "$BOOTIMAGE" >/dev/null 2>&1
-if [ $? -ne 0 ]; then
-    >&2 echo "! Unpack error: $?"
-    exit 1
-  fi
+  magiskboot unpack "$BOOTIMAGE" || exit 1
 fi
-
-if [ ! $(kptools -i kernel -l | grep patched=false) ]; then
-	echo "- kernel has been patched "
-  if [ -f "new-boot.img" ]; then
-    echo "- found backup boot.img ,use it for recovery"
-  else
-    mv kernel kernel.ori
-    echo "- Unpatching kernel"
-    kptools -u --image kernel.ori --out kernel
-    if [ $? -ne 0 ]; then
-      >&2 echo "! Unpatch error: $?"
-      exit 1
-    fi
-    echo "- Repacking boot image"
-    magiskboot repack "$BOOTIMAGE" >/dev/null 2>&1
-    if [ $? -ne 0 ]; then
-      >&2 echo "! Repack error: $?"
-      exit 1
-    fi
-  fi
-
-else
-  echo "- no need unpatch"
-  exit 1
-fi
-
-if [ -f "new-boot.img" ]; then
-  echo "- Flashing boot image"
-  flash_image new-boot.img "$BOOTIMAGE"
-
-  if [ $? -ne 0 ]; then
-    >&2 echo "! Flash error: $?"
-    save_image_to_storage "new-boot.img"
-    exit 1
-  fi
-fi
-
+restore_kernel || exit 1
+magiskboot repack "$BOOTIMAGE" || exit 1
+[ -f new-boot.img ] || exit 1
+backup_boot || exit 1
+flash_image new-boot.img "$BOOTIMAGE" || { save_image_to_storage new-boot.img; exit 1; }
+rm -rf "$KPNDIR/kpm" "$KPNDIR/package_config" "$KPNDIR/rehook" || exit 1
+rm -f /data/adb/service.d/kp-next.sh "$MODROOT/unresolved" || exit 1
 echo "- Flash successful"
-
-# Reset any error code
-true

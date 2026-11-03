@@ -5,8 +5,8 @@ on:
     branches: [main]
   workflow_dispatch:
     inputs:
-      create_draft:
-        description: Create a draft prerelease from this main commit
+      publish_release:
+        description: Publish a formal release from this main commit
         type: boolean
         default: false
 
@@ -21,31 +21,22 @@ jobs:
       - uses: actions/checkout@v4
         with:
           repository: yyyy1314/KPatch-Next-Pro
-          ref: 6087858f78ab24a04cdec87444913eb6b22fd879
+          ref: 3076922686d7a322b539d515cea35d042bda01a0
           path: engine
+          fetch-depth: 0
       - name: Install compiler
         run: |
           curl -fL -o toolchain.tar.xz https://armkeil.blob.core.windows.net/developer/Files/downloads/gnu/12.2.rel1/binrel/arm-gnu-toolchain-12.2.rel1-x86_64-aarch64-none-elf.tar.xz
           tar -Jxf toolchain.tar.xz
-      - name: Build kpimg
-        run: make -C engine/kernel TARGET_COMPILE="$GITHUB_WORKSPACE/arm-gnu-toolchain-12.2.rel1-x86_64-aarch64-none-elf/bin/aarch64-none-elf-" -j2
       - name: Setup Android NDK
         uses: nttld/setup-ndk@v1
         id: ndk
         with:
           ndk-version: r26b
-      - name: Build Android tools
+      - name: Build both engines
         env:
           ANDROID_NDK: ${{ steps.ndk.outputs.ndk-path }}
-        run: |
-          for component in tools user; do
-            cmake -S "engine/$component" -B "engine/$component/build/android" -DCMAKE_TOOLCHAIN_FILE="$ANDROID_NDK/build/cmake/android.toolchain.cmake" -DCMAKE_BUILD_TYPE=Release -DANDROID_PLATFORM=android-33 -DANDROID_ABI=arm64-v8a
-            cmake --build "engine/$component/build/android" -j2
-          done
-          mkdir -p module/bin
-          cp engine/kernel/kpimg module/bin/kpimg
-          cp engine/tools/build/android/kptools module/bin/kptools
-          cp engine/user/build/android/kpatch module/bin/kpatch
+        run: TARGET_COMPILE="$GITHUB_WORKSPACE/arm-gnu-toolchain-12.2.rel1-x86_64-aarch64-none-elf/bin/aarch64-none-elf-" bash engine/build-engines.sh "$GITHUB_WORKSPACE/module/bin/engines"
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
@@ -65,7 +56,7 @@ jobs:
           path: module/
           if-no-files-found: error
       - uses: actions/upload-artifact@v4
-        if: github.event_name == 'workflow_dispatch' && inputs.create_draft
+        if: github.event_name == 'workflow_dispatch' && inputs.publish_release
         with:
           name: release-package-${{ github.sha }}
           path: out/KPatch-Next-Module-Pro-${{ steps.version.outputs.name }}.zip
@@ -73,8 +64,8 @@ jobs:
     outputs:
       version: ${{ steps.version.outputs.name }}
 
-  draft-release:
-    if: github.event_name == 'workflow_dispatch' && inputs.create_draft && github.ref == 'refs/heads/main'
+  release:
+    if: github.event_name == 'workflow_dispatch' && inputs.publish_release && github.ref == 'refs/heads/main'
     needs: build
     runs-on: ubuntu-latest
     permissions:
@@ -85,13 +76,13 @@ jobs:
         with:
           name: release-package-${{ github.sha }}
           path: release-files
-      - name: Create draft prerelease
+      - name: Publish release
         env:
           GH_TOKEN: ${{ github.token }}
           VERSION: ${{ needs.build.outputs.version }}
-          ENGINE_COMMIT: 6087858f78ab24a04cdec87444913eb6b22fd879
+          ENGINE_COMMIT: 3076922686d7a322b539d515cea35d042bda01a0
         run: |
           cp CHANGELOG.md release-notes.md
-          printf '\nModule source: https://github.com/%s/tree/%s\nEngine source: https://github.com/yyyy1314/KPatch-Next-Pro/tree/%s\n\nSHA-256: ' "$GITHUB_REPOSITORY" "$GITHUB_SHA" "$ENGINE_COMMIT" >> release-notes.md
+          printf '\nModule source: https://github.com/%s/tree/%s\nEngine manifest: https://github.com/yyyy1314/KPatch-Next-Pro/blob/%s/engines.json\n\nSHA-256: ' "$GITHUB_REPOSITORY" "$GITHUB_SHA" "$ENGINE_COMMIT" >> release-notes.md
           sha256sum "release-files/KPatch-Next-Module-Pro-$VERSION.zip" >> release-notes.md
-          gh release create "$VERSION" "release-files/KPatch-Next-Module-Pro-$VERSION.zip" --target "$GITHUB_SHA" --title "$VERSION" --notes-file release-notes.md --draft --prerelease
+          gh release create "$VERSION" "release-files/KPatch-Next-Module-Pro-$VERSION.zip" --target "$GITHUB_SHA" --title "$VERSION" --notes-file release-notes.md --latest

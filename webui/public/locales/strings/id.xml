@@ -73,4 +73,8 @@
     <string name="msg_error_loading_apps">Error memuat aplikasi: </string>
     <string name="msg_error_rendering_apps">Error merender aplikasi: </string>
     <string name="msg_unknown">Tidak diketahui</string>
+    <string name="label_engine_version">Versi patch</string>
+    <string name="info_autoload">Dimuat saat boot</string>
+    <string name="info_temporary">Dimuat sementara</string>
+    <string name="info_source_unknown">Sumber tidak diketahui</string>
 </resources>

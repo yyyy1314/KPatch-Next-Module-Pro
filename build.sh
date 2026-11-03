@@ -47,20 +47,15 @@ download_assets() {
     done
 }
 
-VERSION_KPATCH_NEXT=$(get_ver "kpatch-next")
-VERSION_KPATCH_NEXT="${VERSION_KPATCH_NEXT:-latest}"
 VERSION_MAGISKBOOT=$(get_ver "magiskboot")
 VERSION_MAGISKBOOT="${VERSION_MAGISKBOOT:-latest}"
-
-# Fetch KPatch-Next binaries
-if [[ ! -f "module/bin/kpatch" || ! -f "module/bin/kpimg" || ! -f "module/bin/kptools" ]]; then
-    download_assets "yyyy1314/KPatch-Next-Pro" "$VERSION_KPATCH_NEXT" "kpatch-android" "kpimg-linux" "kptools-android" || exit 1
-
-    mv module/bin/kpatch-android module/bin/kpatch
-    mv module/bin/kptools-android module/bin/kptools
-    mv module/bin/kpimg-linux module/bin/kpimg
-fi
-
+for version in 0.13.8 0.13.9; do
+    for tool in kpimg kptools kpatch; do
+        [ -s "module/bin/engines/$version/$tool" ] || { echo "Missing $version/$tool; build engines first"; exit 1; }
+    done
+done
+cp module/engine-tool.sh module/bin/kpatch
+cp module/engine-tool.sh module/bin/kptools
 # Fetch magiskboot
 if [[ ! -f "module/bin/magiskboot" ]]; then
     download_assets "topjohnwu/Magisk" "$VERSION_MAGISKBOOT" "Magisk*.apk" || exit 1
@@ -72,9 +67,10 @@ fi
 
 # zip module
 VERSION=$(sed -n 's/^version=//p' module/module.prop)
-for tool in kpatch kpimg kptools magiskboot; do
+for tool in kpatch kptools magiskboot; do
     [ -s "module/bin/$tool" ] || exit 1
 done
-chmod 755 module/bin/kpatch module/bin/kptools module/bin/magiskboot
+chmod 755 module/bin/kpatch module/bin/kptools module/bin/magiskboot module/bin/engines/*/kpatch module/bin/engines/*/kptools
+rm -f module/bin/kpimg
 rm -f "out/KPatch-Next-Module-Pro-${VERSION}.zip"
 (cd module && zip -r "../out/KPatch-Next-Module-Pro-${VERSION}.zip" .)

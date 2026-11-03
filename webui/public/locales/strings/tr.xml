@@ -81,4 +81,8 @@
     <string name="msg_error_loading_apps">Uygulamalar yüklenirken hata oluştu: </string>
     <string name="msg_error_rendering_apps">Uygulamalar oluşturulurken hata oluştu: </string>
     <string name="msg_unknown">Bilinmiyor</string>
+    <string name="label_engine_version">Yama sürümü</string>
+    <string name="info_autoload">Açılışta yükle</string>
+    <string name="info_temporary">Geçici yükleme</string>
+    <string name="info_source_unknown">Bilinmeyen kaynak</string>
 </resources>
