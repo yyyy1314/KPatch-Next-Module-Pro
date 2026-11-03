@@ -5,8 +5,8 @@ on:
     branches: [main]
   workflow_dispatch:
     inputs:
-      publish_release:
-        description: Publish a formal release from this main commit
+      create_draft:
+        description: Create a draft prerelease from this main commit
         type: boolean
         default: false
 
@@ -56,7 +56,7 @@ jobs:
           path: module/
           if-no-files-found: error
       - uses: actions/upload-artifact@v4
-        if: github.event_name == 'workflow_dispatch' && inputs.publish_release
+        if: github.event_name == 'workflow_dispatch' && inputs.create_draft
         with:
           name: release-package-${{ github.sha }}
           path: out/KPatch-Next-Module-Pro-${{ steps.version.outputs.name }}.zip
@@ -64,8 +64,8 @@ jobs:
     outputs:
       version: ${{ steps.version.outputs.name }}
 
-  release:
-    if: github.event_name == 'workflow_dispatch' && inputs.publish_release && github.ref == 'refs/heads/main'
+  draft-release:
+    if: github.event_name == 'workflow_dispatch' && inputs.create_draft && github.ref == 'refs/heads/main'
     needs: build
     runs-on: ubuntu-latest
     permissions:
@@ -76,7 +76,7 @@ jobs:
         with:
           name: release-package-${{ github.sha }}
           path: release-files
-      - name: Publish release
+      - name: Create draft prerelease
         env:
           GH_TOKEN: ${{ github.token }}
           VERSION: ${{ needs.build.outputs.version }}
@@ -85,4 +85,4 @@ jobs:
           cp CHANGELOG.md release-notes.md
           printf '\nModule source: https://github.com/%s/tree/%s\nEngine manifest: https://github.com/yyyy1314/KPatch-Next-Pro/blob/%s/engines.json\n\nSHA-256: ' "$GITHUB_REPOSITORY" "$GITHUB_SHA" "$ENGINE_COMMIT" >> release-notes.md
           sha256sum "release-files/KPatch-Next-Module-Pro-$VERSION.zip" >> release-notes.md
-          gh release create "$VERSION" "release-files/KPatch-Next-Module-Pro-$VERSION.zip" --target "$GITHUB_SHA" --title "$VERSION" --notes-file release-notes.md --latest
+          gh release create "$VERSION" "release-files/KPatch-Next-Module-Pro-$VERSION.zip" --target "$GITHUB_SHA" --title "$VERSION" --notes-file release-notes.md --draft --prerelease

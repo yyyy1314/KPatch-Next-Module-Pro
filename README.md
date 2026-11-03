@@ -8,12 +8,6 @@
 
 仅支持 ARM64，不支持 APatch 或内置 KPM 的内核。模块更新不会自动更新 boot 中的补丁。
 
-## 构建与发布
-
-Actions → Build → main。普通构建生成可直接安装的 ZIP；勾选 `publish_release` 发布正式版本，只上传一个模块 ZIP。
-
-更新时递增 `module/module.prop` 的版本及 `versionCode`。发布 ZIP 后，再更新 `update.json`。升级内核引擎时同步修改工作流中的固定提交。
-
 ## 鸣谢
 
 - [KPatch-Next-Module](https://github.com/KernelSU-Next/KPatch-Next-Module)：rifsxd、KOWX712
