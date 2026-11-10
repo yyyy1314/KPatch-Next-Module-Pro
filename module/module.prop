@@ -1,7 +1,7 @@
 id=KPatch-Next
 name=KPatch-Next-Pro
-version=0.0.2
-versionCode=2
+version=0.2.1
+versionCode=3
 author=yyyy1314; upstream: rifsxd, KOWX712, bmax121
 description=Independent branch of KPatch-Next-Module, with KernelPatch 0.13.8 / 0.13.9
 updateJson=https://raw.githubusercontent.com/yyyy1314/KPatch-Next-Module-Pro/main/update.json

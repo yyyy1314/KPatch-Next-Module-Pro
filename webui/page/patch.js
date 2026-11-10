@@ -47,6 +47,7 @@ async function getInstalledVersion() {
 let bootSlot = '';
 let bootDev = '';
 let kimgInfo = { banner: '', patched: false };
+let existedExtras = [];
 let newExtras = [];
 
 async function getKpimgInfo() {
@@ -110,11 +111,39 @@ async function parseBootimg() {
         document.getElementById('kernel-info').textContent = kimgInfo.banner;
         document.getElementById('kernel').classList.remove('animate-hidden');
 
+        if (kimgInfo.patched && ini.kpimg) {
+            // Parse extras
+            existedExtras = [];
+            let kpmNum = parseInt(ini.kernel.extra_num);
+            if (isNaN(kpmNum) && ini.extras) {
+                kpmNum = parseInt(ini.extras.num);
+            }
+
+            if (kpmNum > 0) {
+                for (let i = 0; i < kpmNum; i++) {
+                    const extra = ini[`extra ${i}`];
+                    if (extra && extra.type.toUpperCase() === 'KPM') {
+                        existedExtras.push({
+                            type: 'KPM',
+                            name: extra.name,
+                            event: extra.event || 'pre-kernel-init',
+                            args: extra.args || '',
+                            version: extra.version,
+                            license: extra.license,
+                            author: extra.author,
+                            description: extra.description,
+                            isNew: false
+                        });
+                    }
+                }
+            }
+        }
         renderKpmList();
     }
 }
 
 async function extractAndParseBootimg() {
+    existedExtras = [];
     newExtras = [];
     renderKpmList();
     bootDev = '';
@@ -165,13 +194,14 @@ function renderKpmList() {
     const list = document.getElementById('kpm-embed-list');
     list.innerHTML = '';
 
-    const createCard = (item, index) => {
+    const createCard = (item, index, isNew) => {
         const card = document.createElement('div');
         card.className = 'card module-card';
         card.innerHTML = `
             <div class="module-card-header">
                 <div class="flex-header">
                     <div class="module-card-title">${item.name}</div>
+                    ${isNew ? '' : '<div class="tag">' + getString('info_embedded') + '</div>'}
                 </div>
                 <div class="module-card-subtitle">${item.version}, ${getString('info_author', item.author || getString('msg_unknown'))}</div>
                 <div class="module-card-subtitle">${getString('info_args', item.args ? item.args : '(null)')}</div>
@@ -192,14 +222,24 @@ function renderKpmList() {
 
         card.querySelector('.control').onclick = () => openOptionDialog(item);
         card.querySelector('.unload').onclick = () => {
-            newExtras.splice(index, 1);
+            if (isNew) {
+                newExtras.splice(index, 1);
+            } else {
+                existedExtras.splice(index, 1);
+            }
             renderKpmList();
         };
 
         return card;
     };
 
-    newExtras.forEach((item, idx) => list.appendChild(createCard(item, idx)));
+    const appendCard = (item, idx, isNew) => {
+        const card = createCard(item, idx, isNew);
+        list.appendChild(card);
+    }
+
+    existedExtras.forEach((item, idx) => appendCard(item, idx, false));
+    newExtras.forEach((item, idx) => appendCard(item, idx, true));
 }
 
 function openOptionDialog(item) {
@@ -311,6 +351,13 @@ function patch(type) {
             args.push('-T', 'kpm');
         });
 
+        // Embeded kpm
+        existedExtras.forEach(extra => {
+            args.push('-E', extra.name);
+            args.push('-A', escapeShell(extra.args));
+            if (extra.event) args.push('-V', extra.event);
+            args.push('-T', 'kpm');
+        });
     } else {
         // Unpatch logic
         args.push(`${modDir}/patch/boot_unpatch.sh`, bootDev);
@@ -335,6 +382,7 @@ function patch(type) {
             bootSlot = '';
             bootDev = '';
             kimgInfo = { banner: '', patched: false };
+            existedExtras = [];
             newExtras = [];
         }
         exec(`rm -rf ${modDir}/tmp`);

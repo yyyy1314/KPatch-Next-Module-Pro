@@ -62,9 +62,7 @@ if [ ! $(kptools -i kernel -f | grep CONFIG_KALLSYMS_ALL=y) ]; then
 	exit 1
 fi
 
-restore_kernel || exit 1
-
-mv kernel kernel.ori
+mv kernel kernel.ori || exit 1
 
 echo "- Patching kernel"
 
@@ -91,8 +89,6 @@ if [ "$FLASH_TO_DEVICE" = "true" ]; then
   backup_boot || exit 1
   echo "- Flashing new boot image"
   flash_image new-boot.img "$BOOTIMAGE" || { save_image_to_storage new-boot.img; exit 1; }
-  rm -rf "$KPNDIR/kpm" || exit 1
-  mkdir -p "$KPNDIR/kpm" || exit 1
   echo "- Successfully Flashed!"
 else
   save_image_to_storage new-boot.img || exit 1
