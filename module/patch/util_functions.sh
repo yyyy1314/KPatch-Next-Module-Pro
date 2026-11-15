@@ -266,14 +266,14 @@ flash_image() {
       blockdev --setrw "$2"
       local blk_ro=$(blockdev --getro "$2")
       [ "$blk_ro" -eq 1 ] && return 2
-      eval "$CMD1" | dd of="$2" bs="$blk_bs" iflag=fullblock conv=notrunc,fsync 2>/dev/null || return 3
+      eval "$CMD1" | dd of="$2" bs="$blk_bs" iflag=fullblock conv=notrunc,fsync 2>/dev/null
       sync
   } elif [ -c "$2" ]; then {
-      flash_eraseall "$2" >&2 || return 3
-      eval "$CMD1" | nandwrite -p "$2" - >&2 || return 3
+      flash_eraseall "$2" >&2
+      eval "$CMD1" | nandwrite -p "$2" - >&2
   } else {
       echo "- Not block or char device, storing image"
-      eval "$CMD1" > "$2" 2>/dev/null || return 3
+      eval "$CMD1" > "$2" 2>/dev/null
   } fi
   return 0
 }
@@ -284,7 +284,7 @@ save_image_to_storage() {
   local FILENAME="kpatch_next_patched_$DATE.img"
   local OUT="/storage/emulated/0/Download/$FILENAME"
 
-  cp -f "$IMAGE" "$OUT" || return 1
+  cp -f "$IMAGE" "$OUT"
   echo "- Patched image saved to $OUT"
 }
 

@@ -62,7 +62,12 @@ if [ ! $(kptools -i kernel -f | grep CONFIG_KALLSYMS_ALL=y) ]; then
 	exit 1
 fi
 
-mv kernel kernel.ori || exit 1
+if [  $(kptools -i kernel -l | grep patched=false) ]; then
+	echo "- Backing boot.img "
+  cp "$BOOTIMAGE" "ori.img" >/dev/null 2>&1
+fi
+
+mv kernel kernel.ori
 
 echo "- Patching kernel"
 
@@ -85,12 +90,19 @@ if [ $? -ne 0 ]; then
 fi
 
 if [ "$FLASH_TO_DEVICE" = "true" ]; then
-  [ -f new-boot.img ] || exit 1
-  backup_boot || exit 1
-  echo "- Flashing new boot image"
-  flash_image new-boot.img "$BOOTIMAGE" || { save_image_to_storage new-boot.img; exit 1; }
+  # flash
+  if [ -b "$BOOTIMAGE" ] || [ -c "$BOOTIMAGE" ] && [ -f "new-boot.img" ]; then
+    echo "- Flashing new boot image"
+    flash_image new-boot.img "$BOOTIMAGE"
+    if [ $? -ne 0 ]; then
+      >&2 echo "! Flash error: $?"
+      save_image_to_storage "new-boot.img"
+      exit 1
+    fi
+  fi
+
   echo "- Successfully Flashed!"
 else
-  save_image_to_storage new-boot.img || exit 1
+  save_image_to_storage "new-boot.img"
   echo "- Successfully Patched!"
 fi

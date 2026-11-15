@@ -143,10 +143,11 @@ async function parseBootimg() {
 }
 
 async function extractAndParseBootimg() {
-    existedExtras = [];
-    newExtras = [];
-    renderKpmList();
-    bootDev = '';
+    if (bootDev) {
+        document.getElementById('bootimg').classList.remove('animate-hidden');
+        extractBootimg(bootDev);
+        return;
+    }
 
     // Prepare work directory
     const prepare = spawn(`mkdir -p ${modDir}/tmp && rm -rf ${modDir}/tmp/*`);
@@ -354,7 +355,7 @@ function patch(type) {
         // Embeded kpm
         existedExtras.forEach(extra => {
             args.push('-E', extra.name);
-            args.push('-A', escapeShell(extra.args));
+            if (extra.args) args.push('-A', escapeShell(extra.args));
             if (extra.event) args.push('-V', extra.event);
             args.push('-T', 'kpm');
         });
@@ -378,11 +379,10 @@ function patch(type) {
     process.stderr.on('data', onOutput);
     process.on('exit', (code) => {
         if (code === 0) {
-            if (type !== 'patch' || flashToDevice.selected) document.getElementById('reboot-fab').classList.remove('hide');
+            document.getElementById('reboot-fab').classList.remove('hide');
             bootSlot = '';
             bootDev = '';
             kimgInfo = { banner: '', patched: false };
-            existedExtras = [];
             newExtras = [];
         }
         exec(`rm -rf ${modDir}/tmp`);
